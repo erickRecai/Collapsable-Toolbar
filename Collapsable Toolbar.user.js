@@ -103,10 +103,6 @@ https://erickthingsblog.wordpress.com/2019/09/12/userscript-jquery-errors/
         text-align: center;
         cursor: pointer;
     }
-    #ctb-placeholder input {
-        width: 70px;
-        float: right;
-    }
 
     #ctb-open {
         background: #77ff77;
