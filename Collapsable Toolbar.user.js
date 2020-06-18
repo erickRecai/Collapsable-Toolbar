@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Collapsable Toolbar
 // @namespace    https://github.com/erickRecai
-// @version      1.0.0
-// @description  Creates a toolbar to place buttons from userscripts.
+// @version      1.01.04
+// @description  Creates a toolbar to place buttons/functions from userscripts.
 // @author       guyRicky
 
 // @match        *://*/*
@@ -17,104 +17,168 @@
 // ==/UserScript==
 /* jshint esversion: 6 */
 
-/*
-## errors ##
-- some sites don't function properly with userscripts that use jquery.
-https://erickthingsblog.wordpress.com/2019/09/12/userscript-jquery-errors/
-*/
-
 (function () {
     'use strict';
 
-    const buttonTransparency = .2; // set to a value between 0 and 1, 1 is no transparency, .5 is 50% transparency.
-    const startCollapsed = 0; // 1 to start collapsed, 0 to start uncollapsed.
+    /*
+    == last update: 6/18/2020 ==
 
-    if (!jQuery("#ctb-buttons").length) {
+    == todo ==
+    10. move width and tranparency options to script options/local storage.
+    
+    == code markers ==
+    AA. determine and set collapse state.
+    AB. generate and add toolbar.
+    AC. hide, open and close events.
+    ZZ. script CSS
+    
+    */
+    const toolbarWidth = 90;
+    const toolbarTransparency = .2; // set to a value between 0 and 1, 1 is no transparency, .5 is 50% transparency.
 
-        let startingClass = "ctb-visible";
-        let startingClass2 = "ctb-hidden";
-        if (startCollapsed) {
-            startingClass = "ctb-hidden";
-            startingClass2 = "ctb-visible";
-        }
+    // ==== AA. initialize main container =========================================================|
 
-        // ==== create element ====================================================================|
-        let webtoolsElements = [
-            "<div id='ctb-placeholder'>",
-            "<div id='ctb-open' class='"+ startingClass2 +"'>Open</div>",
-            "<div id='ctb-hide' class='"+ startingClass +"'>Hide</div>",
-            "<div id='ctb-buttons' class='"+ startingClass +"'>",
-            "<div id='ctb-close'>&times;</div>"
-        ];
+    let startCollapsed = 0; // 1 to start collapsed, 0 to start fully visible.
+    const localStorageName = "ctb start collapsed";
+    if (window.localStorage.getItem(localStorageName)) {
+        startCollapsed = window.localStorage.getItem(localStorageName);
+        startCollapsed = (startCollapsed == "true");
+    }
 
-        let webtoolsElement =
-            webtoolsElements[0] +
-            webtoolsElements[1] +
-            webtoolsElements[2] +
-            webtoolsElements[3] +
-            webtoolsElements[4] +"</div></div>"
-        jQuery("body").prepend(webtoolsElement);
+    const visibleClass = "ctb-visible";
+    const hiddenClass = "ctb-hidden";
 
-        // ==== functions =========================================================================|
-        jQuery("#ctb-open").click(function () {
-            console.log("ctb-open");
-            jQuery("#ctb-buttons").removeClass("ctb-hidden");
-            jQuery("#ctb-buttons").addClass("ctb-visible");
-            jQuery("#ctb-open").removeClass("ctb-visible");
-            jQuery("#ctb-open").addClass("ctb-hidden");
-            jQuery("#ctb-hide").removeClass("ctb-hidden");
-            jQuery("#ctb-hide").addClass("ctb-visible");
-        });
-        jQuery("#ctb-hide").click(function () {
-            console.log("ctb-hide");
-            jQuery("#ctb-buttons").removeClass("ctb-visible");
-            jQuery("#ctb-buttons").addClass("ctb-hidden");
-            jQuery("#ctb-open").removeClass("ctb-hidden");
-            jQuery("#ctb-open").addClass("ctb-visible");
-            jQuery("#ctb-hide").removeClass("ctb-visible");
-            jQuery("#ctb-hide").addClass("ctb-hidden");
-        });
+    let startingStateClass = visibleClass;
+    let otherStartingStateClass = hiddenClass;
+    if (startCollapsed) {
+        startingStateClass = hiddenClass;
+        otherStartingStateClass = visibleClass;
+    }
 
-        jQuery("#ctb-close").click(function () { jQuery("#ctb-placeholder").remove(); });
+    // ==== AB. create element ====================================================================|
 
-        // ==== CSS ===============================================================================|
-        const webtoolsCss =
+    const openButtonId = "ctb-open";
+    const hideButtonId = "ctb-hide";
+
+    let collapsableToolbarElement =
+        "<div id='ctb-main-container'>"+
+            "<div id='"+ openButtonId +"' class='"+ otherStartingStateClass +" ctb-green ctb-rounded-block'>ctb-open</div>"+
+            "<div id='"+ hideButtonId +"' class='"+ startingStateClass +" ctb-red ctb-rounded-block'>ctb-hide</div>"+
+            "<div id='ctb-inner-container' class='"+ startingStateClass +"'>"+
+                "<div id='ctb-container1'></div>"+
+                "<div id='ctb-container2'></div>"+
+                "<div id='ctb-container3'></div>"+
+            "</div>"+
+            "<div id='ctb-close' class='ctb-gray ctb-rounded-block "+ startingStateClass +"'>close ctb</div>"+
+        "</div>";
+
+    jQuery("body").prepend(collapsableToolbarElement);
+
+    // ==== AC. ctb events/functions ==============================================================|
+    const mainSelector = "#ctb-inner-container, #"+ hideButtonId +", #ctb-close";
+
+    jQuery("#"+ hideButtonId).click(function () {
+        //console.log(hideButtonId);
+        window.localStorage.setItem(localStorageName, true);
+
+        switchClasses(
+            mainSelector,
+            "#"+ openButtonId,
+            visibleClass,
+            hiddenClass
+        );
+    });
+
+    jQuery("#"+ openButtonId).click(function () {
+        //console.log(openButtonId);
+        window.localStorage.setItem(localStorageName, false);
+
+        switchClasses(
+            mainSelector,
+            "#"+ openButtonId,
+            hiddenClass,
+            visibleClass
+        );
+    });
+
+    function switchClasses(mainSelector, subSelector, removedClass, newClass) {
+        jQuery(mainSelector).removeClass(removedClass);
+        jQuery(mainSelector).addClass(newClass);
+        jQuery(subSelector).removeClass(newClass);
+        jQuery(subSelector).addClass(removedClass);
+    }
+
+    // ==== close ====
+    jQuery("#ctb-close").click(function () { jQuery("#ctb-main-container").remove(); });
+
+    // ==== ZZ. script CSS ========================================================================|
+
+    if(1){
+        const cToolsCss =
 `<style type="text/css">
-    #ctb-placeholder {
-        width: 40px;
-        margin: 0 2px 2px;
+    #ctb-main-container {
+        max-width: `+ toolbarWidth +`px;
+        max-height: 50%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        margin: 0 2px 2px; /* right and bottom spacing */
+        line-height: initial;
+
         display: block;
-        opacity: `+ buttonTransparency +`;
+        opacity: `+ toolbarTransparency +`;
         position: fixed;
         bottom: 0px;
         right: 0px;
         z-index: 9999;
+
+        font-size: 11px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        color: black !important;
     }
-    #ctb-placeholder:hover {
+    #ctb-main-container:hover {
         opacity: 1;
     }
-    #ctb-placeholder div {
+
+    #ctb-main-container>div{
+        margin: 2px 0;
+    }
+    #ctb-main-container input {
+        max-width: `+ (toolbarWidth - 10) +`px;
+        padding: 1px;
+        margin: 1px 0;
+    }
+    #ctb--main-container > div, #ctb-inner-container > div > div{
+        margin: 2px 0;
+    }
+    .ctb-rounded-block { /* standard css for most blocks */
         display: block;
         padding: 2px;
-        border-radius: 4px;
-        margin-top: 2px;
+        border-radius: 3px;
+        margin: 2px 0;
+
         font-size: 11px !important;
         font-weight: bold;
         text-align: center;
         cursor: pointer;
     }
-    #ctb-placeholder input {
-        width: 70px;
-        float: right;
-    }
 
-    #ctb-open {
-        background: #77ff77;
+    .ctb-green {
+        background: #62bb66;
     }
-    #ctb-hide {
-        background: #ff7777;
+    .ctb-yellow {
+        background:  #ffc107;
     }
-    #ctb-close {
+    .ctb-orange {
+        background: #FF9800;
+    }
+    .ctb-red {
+        background: #e06464;
+    }
+    .ctb-blue {
+        background: #50a6fe;
+    }
+    .ctb-gray {
         background: #777777;
         text-align: center;
     }
@@ -125,7 +189,11 @@ https://erickthingsblog.wordpress.com/2019/09/12/userscript-jquery-errors/
     .ctb-visible {
         display: block !important;
     }
-</style>`;
-        jQuery(document.body).append(webtoolsCss);
+    .ctb-visible-inline {
+        display: inline-block !important;
     }
+</style>`;
+        jQuery(document.body).append(cToolsCss);
+    }
+
 })();
