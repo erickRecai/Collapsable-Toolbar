@@ -21,7 +21,7 @@
     'use strict';
 
     /*
-    == last update: 6/18/2020 ==
+    == last update: 7/07/2020 ==
 
     == todo ==
     10. move width and tranparency options to script options/local storage.
@@ -62,16 +62,15 @@
 
     let collapsableToolbarElement =
         "<div id='ctb-main-container'>"+
-            "<div id='"+ openButtonId +"' class='"+ otherStartingStateClass +" ctb-green ctb-rounded-block'>ctb-open</div>"+
-            "<div id='"+ hideButtonId +"' class='"+ startingStateClass +" ctb-red ctb-rounded-block'>ctb-hide</div>"+
+            "<div id='"+ openButtonId +"' class='"+ otherStartingStateClass +" ctb-green ctb-rounded-block'>ctb open</div>"+
+            "<div id='"+ hideButtonId +"' class='"+ startingStateClass +" ctb-red ctb-rounded-block'>ctb hide</div>"+
+            "<div id='ctb-close' class='ctb-gray ctb-rounded-block "+ startingStateClass +"'>close ctb</div>"+
             "<div id='ctb-inner-container' class='"+ startingStateClass +"'>"+
                 "<div id='ctb-container1'></div>"+
                 "<div id='ctb-container2'></div>"+
                 "<div id='ctb-container3'></div>"+
             "</div>"+
-            "<div id='ctb-close' class='ctb-gray ctb-rounded-block "+ startingStateClass +"'>close ctb</div>"+
         "</div>";
-
     jQuery("body").prepend(collapsableToolbarElement);
 
     // ==== AC. ctb events/functions ==============================================================|
@@ -144,6 +143,7 @@
         margin: 2px 0;
     }
     #ctb-main-container input {
+        -webkit-appearance: auto;
         max-width: `+ (toolbarWidth - 10) +`px;
         padding: 1px;
         margin: 1px 0;
